@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 // Components
 import Login from "./Login";
@@ -6,9 +7,9 @@ import Login from "./Login";
 const Navbar = props => {
   return (
     <nav className="navbar navbar-dark bg-dark">
-      <a className="navbar-brand" href="#">
+      <Link to="/" className="navbar-brand">
         Navbar
-      </a>
+      </Link>
       <Login />
     </nav>
   );

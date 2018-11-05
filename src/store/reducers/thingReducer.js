@@ -1,8 +1,8 @@
 import * as actionTypes from "../actions/actionTypes";
 
 const initialState = {
-  things: [],
-  privateThings: []
+  public: [],
+  private: []
 };
 
 const reducer = (state = initialState, action) => {
@@ -10,13 +10,13 @@ const reducer = (state = initialState, action) => {
     case actionTypes.GET_THINGS:
       return {
         ...state,
-        things: action.payload
+        public: action.payload
       };
 
     case actionTypes.GET_PRIVATE_THINGS:
       return {
         ...state,
-        privateThings: action.payload
+        private: action.payload
       };
 
     default:

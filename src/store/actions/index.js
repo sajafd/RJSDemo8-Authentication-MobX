@@ -1,1 +1,1 @@
-export { postForm } from "./post";
+export { fetchGarbage, fetchTreasure } from "./thingActions";

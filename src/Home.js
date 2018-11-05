@@ -1,12 +1,15 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const Home = props => {
   return (
     <div className="row d-flex align-items-center" style={{ height: "80vh" }}>
-      <button className="btn btn-lg btn-outline-secondary mx-auto">
+      <Link to="/garbage" className="btn btn-lg btn-outline-secondary mx-auto">
         Random Garbage
-      </button>
-      <button className="btn btn-lg btn-warning mx-auto">TREASURE</button>
+      </Link>
+      <Link to="/treasure" className="btn btn-lg btn-warning mx-auto">
+        TREASURE
+      </Link>
     </div>
   );
 };
