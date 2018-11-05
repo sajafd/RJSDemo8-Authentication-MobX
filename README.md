@@ -86,7 +86,35 @@ export const login = userData => {
 };
 ```
 
-4. Connect action to `Login.js`
+4. Connect action to `Login.js`. Show the token being logged.
 
 ```javascript
+...
+  handleSubmit(event) {
+    event.preventDefault();
+    this.props.login(this.state);
+  }
+...
+const mapDispatchToProps = dispatch => ({
+  login: userData => dispatch(actionCreators.login(userData))
+});
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(Login);
+```
+
+5. Explain JWT. Install `jwt-decode`. Decode the token:
+
+```bash
+$ yarn add jwt-decode
+```
+
+`authActions.js`
+
+```javascript
+...
+.then(user => console.log(jwt_decode(user.token)))
+...
 ```
