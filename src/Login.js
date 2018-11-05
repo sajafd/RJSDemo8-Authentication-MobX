@@ -2,18 +2,39 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 
 class Login extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      username: "",
+      password: ""
+    };
+
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange(event) {
+    this.setState({ [event.target.name]: event.target.value });
+  }
+
   render() {
+    const { username, password } = this.state;
     return (
       <form className="form-inline">
         <input
           className="form-control mr-sm-2"
           type="text"
+          name="username"
+          value={username}
           placeholder="Username"
+          onChange={this.handleChange}
         />
         <input
           className="form-control mr-sm-2"
           type="password"
+          name="password"
+          value={password}
           placeholder="Password"
+          onChange={this.handleChange}
         />
         <button className="btn btn-primary my-2 my-sm-0 mr-2" type="submit">
           Login
