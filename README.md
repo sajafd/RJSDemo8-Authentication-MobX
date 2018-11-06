@@ -400,9 +400,63 @@ export default connect(mapStateToProps)(PrivateRoute);
 
 If the page refreshes after sign in, I should STILL be signed in!
 
-1. Add an action that checks for a token:
+1. Store the token in local storage:
 
 `authActions.js`
 
 ```javascript
+const setAuthToken = token => {
+  localStorage.setItem("treasureToken", token);
+  axios.defaults.headers.common.Authorization = `jwt ${token}`;
+};
+```
+
+2. Add an action that checks for a token in localstorage:
+
+`authActions.js`
+
+```javascript
+export const checkForExpiredToken = () => {
+  return dispatch => {
+    // Check for token expiration
+    const token = localStorage.treasureToken;
+
+    if (token) {
+      const currentTime = Date.now() / 1000;
+
+      // Decode token and get user info
+      const user = jwt_decode(token);
+
+      // Check token expiration
+      if (user.exp >= currentTime) {
+        // Set auth token header
+        setAuthToken(token);
+        // Set user
+        dispatch(setCurrentUser(user));
+      } else {
+        dispatch(logout());
+      }
+    }
+  };
+};
+```
+
+3. Call the action from `componentDidMount` in `App.js`:
+
+```javascript
+class App extends Component {
+  componentDidMount() {
+    this.props.checkToken();
+  }
+  ...
+}
+
+const mapDispatchToProps = dispatch => ({
+  checkToken: () => dispatch(actionCreators.checkForExpiredToken())
+});
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(App);
 ```
