@@ -8,6 +8,8 @@
    - Explain that the backend has a protected route
    - Show the 401
 
+#### Basic Auth
+
 2. Wire up some redux:
 
 `actionTypes.js`
@@ -105,7 +107,7 @@ export default connect(
 )(Login);
 ```
 
-5. Explain JWT. Install `jwt-decode`. Decode the token:
+5. Explain JWT. Install `jwt-decode`. Decode the token. Set the user:
 
 ```bash
 $ yarn add jwt-decode
@@ -117,4 +119,112 @@ $ yarn add jwt-decode
 ...
 .then(user => console.log(jwt_decode(user.token)))
 ...
+```
+
+to
+
+```javascript
+...
+.then(user => {
+    const decodedUser = jwt_decode(user.token);
+    dispatch(setCurrentUser(decodedUser));
+})
+...
+```
+
+6. Still not able to make the request! Time to `setAuthToken`:
+
+`authActions.js`
+
+```javascript
+const setAuthToken = token => {
+  axios.defaults.headers.common.Authorization = `jwt ${token}`;
+};
+
+...
+
+const login = userData => {
+    ...
+    .then(user => {
+        const decodedUser = jwt_decode(user.token);
+        setAuthToken(user.token);
+        dispatch(setCurrentUser(decodedUser));
+      })
+    ...
+}
+```
+
+#### UX Features
+
+##### Logout Button
+
+7. Logout Component:
+
+`Logout.js`
+
+```javascript
+import React from "react";
+import { connect } from "react-redux";
+
+const Logout = props => {
+  return (
+    <button className="btn btn-danger" onClick={() => alert("LOGOUT!!")}>
+      Logout {props.user.username}
+    </button>
+  );
+};
+
+const mapStateToProps = state => ({
+  user: state.auth.user
+});
+
+export default connect(mapStateToProps)(Logout);
+```
+
+8. Conditional render:
+
+`Navbar.js`
+
+```javascript
+const Navbar = props => {
+  return (
+    <nav className="navbar navbar-dark bg-dark">
+      <Link to="/" className="navbar-brand">
+        Navbar
+      </Link>
+      {props.user ? <Logout /> : <Login />}
+    </nav>
+  );
+};
+
+const mapStateToProps = state => ({
+  user: state.auth.user
+});
+
+export default connect(mapStateToProps)(Navbar);
+```
+
+9. Logout action:
+
+`authActions.js`
+
+```javascript
+export const logout = () => setCurrentUser();
+```
+
+10. Wire logout button:
+
+`Logout.js`
+
+```javascript
+// Actions
+import * as actionCreators from "./store/actions";
+...
+<button className="btn btn-danger" onClick={props.logout}>
+    Logout {props.user.username}
+</button>
+...
+const mapDispatchToProps = dispatch => ({
+  logout: () => dispatch(actionCreators.logout())
+});
 ```
