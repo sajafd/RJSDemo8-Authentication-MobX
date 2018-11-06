@@ -154,11 +154,52 @@ const login = userData => {
 }
 ```
 
+#### Signup
+
+7. Implement signup action:
+
+`authActions.js`
+
+```javascript
+export const signup = userData => {
+  return dispatch => {
+    axios
+      .post("https://precious-things.herokuapp.com/signup/", userData)
+      .then(res => res.data)
+      .then(user => {
+        const decodedUser = jwt_decode(user.token);
+        setAuthToken(user.token);
+        dispatch(setCurrentUser(decodedUser));
+      })
+      .catch(err => console.error(err.response));
+  };
+};
+```
+
+8. Connect to `Signup.js`. This will work BUT THE UX IS BAD (no indication that it worked!):
+
+```javascript
+...
+handleSubmit(event) {
+    event.preventDefault();
+    this.props.signup(this.state);
+}
+...
+const mapDispatchToProps = dispatch => ({
+  signup: userData => dispatch(actionCreators.signup(userData))
+});
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(Signup);
+```
+
 #### UX Features
 
 ##### Logout Button
 
-7. Logout Component:
+1. Logout Component:
 
 `Logout.js`
 
@@ -181,7 +222,7 @@ const mapStateToProps = state => ({
 export default connect(mapStateToProps)(Logout);
 ```
 
-8. Conditional render:
+2. Conditional render:
 
 `Navbar.js`
 
@@ -204,7 +245,7 @@ const mapStateToProps = state => ({
 export default connect(mapStateToProps)(Navbar);
 ```
 
-9. Logout action:
+3. Logout action:
 
 `authActions.js`
 
@@ -212,7 +253,7 @@ export default connect(mapStateToProps)(Navbar);
 export const logout = () => setCurrentUser();
 ```
 
-10. Wire logout button:
+4. Wire logout button:
 
 `Logout.js`
 
@@ -227,4 +268,141 @@ import * as actionCreators from "./store/actions";
 const mapDispatchToProps = dispatch => ({
   logout: () => dispatch(actionCreators.logout())
 });
+```
+
+##### DO NOT SHOW USERS THINGS THEY CAN'T USE!
+
+1. Conditionally render the treasure button:
+
+`Home.js`
+
+```javascript
+const Home = props => {
+  return (
+    ...
+    {props.user && (
+    <Link to="/treasure" className="btn btn-lg btn-warning mx-auto">
+        TREASURE
+    </Link>
+    )}
+    ...
+  );
+};
+
+const mapStateToProps = state => ({
+  user: state.auth.user
+});
+```
+
+##### Redirect after signup
+
+1. Demonstrate the `history` object in `Singup.js`. Explain where it came from:
+
+```javascript
+...
+render() {
+    const { username, email, password } = this.state;
+    console.log(this.props.history);
+    ...
+}
+...
+```
+
+to
+
+```javascript
+...
+render() {
+    const { username, email, password } = this.state;
+    this.props.history.push('/');
+    ...
+}
+...
+```
+
+2. Modify action to accept `history`:
+
+`authActions.js`
+
+```javascript
+export const signup = (userData, history) => {
+  return dispatch => {
+    ...
+      .then(user => {
+        const decodedUser = jwt_decode(user.token);
+        setAuthToken(user.token);
+        dispatch(setCurrentUser(decodedUser));
+        history.push("/");
+      })
+    ...
+  };
+};
+```
+
+`Signup.js`
+
+```javascript
+class Signup extends Component {
+  ...
+  handleSubmit(event) {
+    event.preventDefault();
+    this.props.signup(this.state, this.props.history);
+  }
+  ...
+}
+
+const mapDispatchToProps = dispatch => ({
+  signup: (userData, history) =>
+    dispatch(actionCreators.signup(userData, history))
+});
+```
+
+##### PrivateRoutes
+
+Don't allow users to access pages they can't use! Redirect from private pages!
+
+1. Private Route:
+
+`PrivateRoute.js`
+
+```javascript
+const PrivateRoute = ({ component: Component, user, redirectUrl, ...rest }) => (
+  <Route
+    {...rest}
+    render={props =>
+      user ? <Component {...props} /> : <Redirect to={redirectUrl || "/"} />
+    }
+  />
+);
+
+const mapStateToProps = state => ({
+  user: state.auth.user
+});
+
+export default connect(mapStateToProps)(PrivateRoute);
+```
+
+2. Use private route for pages that require auth:
+
+`App.js`
+
+```javascript
+<Switch>
+  <Route path="/" exact component={Home} />
+  <Route path="/garbage" component={Garbage} />
+  <PrivateRoute path="/treasure" component={Treasure} />
+  <Route path="/signup" component={Signup} />
+  <Redirect to="/" />
+</Switch>
+```
+
+##### Persistent Login
+
+If the page refreshes after sign in, I should STILL be signed in!
+
+1. Add an action that checks for a token:
+
+`authActions.js`
+
+```javascript
 ```
