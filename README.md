@@ -208,7 +208,7 @@ logoutUser() {
 // Actions
 import authStore from "./store/authStore";
 ...
-<button className="btn btn-danger" onClick={props.logout}>
+<button className="btn btn-danger" onClick={authStore.logoutUser}>
     Logout {authStore.user.username}
 </button>
 ...
