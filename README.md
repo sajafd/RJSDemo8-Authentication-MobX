@@ -333,7 +333,7 @@ If the page refreshes after sign in, I should STILL be signed in!
 
 1.  Store the token in local storage:
 
-`authActions.js`
+`authStore.js`
 
 ```javascript
 setAuthToken(token) => {
@@ -345,7 +345,7 @@ setAuthToken(token) => {
 };
 ```
 
-2.  Add an action that checks for a token in `localstorage`:
+2.  Add an action that checks for a token in `localStorage`:
 
 `authStore.js`
 
