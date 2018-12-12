@@ -301,6 +301,9 @@ Don't allow users to access pages they can't use! Redirect from private pages!
 `PrivateRoute.js`
 
 ```javascript
+import { Switch, Route, Redirect } from "react-router-dom";
+import { observer } from "mobx-react";
+
 const PrivateRoute = ({ component: Component, authStore.user, redirectUrl, ...rest }) => (
   <Route
     {...rest}
