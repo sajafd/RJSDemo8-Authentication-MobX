@@ -48,6 +48,8 @@ export default authStore;
 
 ```javascript
 import {observer} from "mobx-react";
+import authStore from "./store/authStore";
+
 ...
   handleSubmit(event) {
     event.preventDefault();
