@@ -1,83 +1,19 @@
-# RJSDemo8 - Forms
+# RJSDemo9 - Authentication
 
-[Slides](https://docs.google.com/presentation/d/1VNDFN2oIkKLUpKRZ7hkiRjyJTv3d7-Lp6eZJPZn2P5E/edit?usp=sharing)
+1.  Walk through the code:
 
-1. Walk through the code:
-
-   - Explain what this thing is
-   - Explain that the backend has a protected route
-   - Show the 401
+    - Explain what this thing is
+    - Explain that the backend has a protected route
+    - Show the 401
 
 #### Basic Auth
 
-2. Wire up some redux:
+2.  Add a `loginUser` method:
 
-`actionTypes.js`
-
-```javascript
-export const SET_CURRENT_USER = "SET_CURRENT_USER";
-```
-
-`authReducer.js`
+`authStore.js`
 
 ```javascript
-import * as actionTypes from "../actions/actionTypes";
-
-const initialState = {
-  user: null
-};
-
-export default (state = initialState, action) => {
-  switch (action.type) {
-    case actionTypes.SET_CURRENT_USER:
-      return {
-        ...state,
-        user: action.payload
-      };
-
-    default:
-      return state;
-  }
-};
-```
-
-`reducers/index.js`
-
-```javascript
-import thingReducer from "./thingReducer";
-import authReducer from "./authReducer";
-
-export default combineReducers({
-  things: thingReducer,
-  auth: authReducer
-});
-```
-
-`authActions.js`
-
-```javascript
-// NOT exported.
-// Will only be used internally by other actions.
-const setCurrentUser = user => ({
-  type: actionTypes.SET_CURRENT_USER,
-  payload: user
-});
-```
-
-`actions/index.js`
-
-```javascript
-// Nothing to export yet
-export {} from "./authActions";
-```
-
-3. Add a login action:
-
-`authActions.js`
-
-```javascript
-export const login = userData => {
-  return dispatch => {
+ loginUser(userData) {
     axios
       .post("https://precious-things.herokuapp.com/login/", userData)
       .then(res => res.data)
@@ -85,29 +21,23 @@ export const login = userData => {
       .then(user => console.log(user))
       .catch(err => console.error(err.response));
   };
-};
 ```
 
-4. Connect action to `Login.js`. Show the token being logged.
+3.  Connect method to `Login.js`. Show the token being logged.
 
 ```javascript
+import {observer} from "mobx-react";
 ...
   handleSubmit(event) {
     event.preventDefault();
-    this.props.login(this.state);
+    authStore.loginUser(this.state);
   }
 ...
-const mapDispatchToProps = dispatch => ({
-  login: userData => dispatch(actionCreators.login(userData))
-});
 
-export default connect(
-  null,
-  mapDispatchToProps
-)(Login);
+export default observer(Login);
 ```
 
-5. Explain JWT. Install `jwt-decode`. Decode the token. Set the user:
+5.  Explain JWT. Install `jwt-decode`. Decode the token. Set the user:
 
 ```bash
 $ yarn add jwt-decode
@@ -127,28 +57,33 @@ to
 ...
 .then(user => {
     const decodedUser = jwt_decode(user.token);
-    dispatch(setCurrentUser(decodedUser));
+    this.user = decodedUser;
 })
 ...
 ```
 
-6. Still not able to make the request! Time to `setAuthToken`:
+6.  Still not able to make the request! Time to `setAuthToken`:
 
 `authActions.js`
 
 ```javascript
-const setAuthToken = token => {
-  axios.defaults.headers.common.Authorization = `jwt ${token}`;
+setAuthToken(token) {
+  if (token) {
+    axios.defaults.headers.common.Authorization = `jwt ${token}`;
+  }
+  else {
+    delete axios.defaults.headers.common.Authorization;
+  }
 };
 
 ...
 
-const login = userData => {
+loginUser(userData) {
     ...
     .then(user => {
         const decodedUser = jwt_decode(user.token);
-        setAuthToken(user.token);
-        dispatch(setCurrentUser(decodedUser));
+        this.setAuthToken(user.token);
+        this.user = decodedUser;
       })
     ...
 }
@@ -156,73 +91,61 @@ const login = userData => {
 
 #### Signup
 
-7. Implement signup action:
+7.  Implement signup action:
 
 `authActions.js`
 
 ```javascript
-export const signup = userData => {
-  return dispatch => {
+signupUser (userData) {
     axios
       .post("https://precious-things.herokuapp.com/signup/", userData)
       .then(res => res.data)
       .then(user => {
         const decodedUser = jwt_decode(user.token);
-        setAuthToken(user.token);
-        dispatch(setCurrentUser(decodedUser));
+        this.setAuthToken(user.token);
+        this.user = decodedUser;
       })
       .catch(err => console.error(err.response));
   };
-};
 ```
 
-8. Connect to `Signup.js`. This will work BUT THE UX IS BAD (no indication that it worked!):
+8.  Connect to `Signup.js`. This will work BUT THE UX IS BAD (no indication that it worked!):
 
 ```javascript
 ...
 handleSubmit(event) {
     event.preventDefault();
-    this.props.signup(this.state);
+    authStore.signupUser(this.state);
 }
 ...
-const mapDispatchToProps = dispatch => ({
-  signup: userData => dispatch(actionCreators.signup(userData))
-});
 
-export default connect(
-  null,
-  mapDispatchToProps
-)(Signup);
+export default observer(Signup);
 ```
 
 #### UX Features
 
 ##### Logout Button
 
-1. Logout Component:
+1.  Logout Component:
 
 `Logout.js`
 
 ```javascript
 import React from "react";
-import { connect } from "react-redux";
+import { observer } from "mobx-react";
 
 const Logout = props => {
   return (
     <button className="btn btn-danger" onClick={() => alert("LOGOUT!!")}>
-      Logout {props.user.username}
+      Logout {authStore.user.username}
     </button>
   );
 };
 
-const mapStateToProps = state => ({
-  user: state.auth.user
-});
-
-export default connect(mapStateToProps)(Logout);
+export default observer(Logout);
 ```
 
-2. Conditional render:
+2.  Conditional render:
 
 `Navbar.js`
 
@@ -233,54 +156,52 @@ const Navbar = props => {
       <Link to="/" className="navbar-brand">
         Navbar
       </Link>
-      {props.user ? <Logout /> : <Login />}
+      {authStore.user ? <Logout /> : <Login />}
     </nav>
   );
 };
 
-const mapStateToProps = state => ({
-  user: state.auth.user
-});
-
-export default connect(mapStateToProps)(Navbar);
+export default observer(Navbar);
 ```
 
-3. Logout action:
+3.  Logout method:
 
-`authActions.js`
+`authStore.js`
 
 ```javascript
-export const logout = () => setCurrentUser();
+logoutUser() {
+  this.user = null;
+  this.setAuthToken();
+};
 ```
 
-4. Wire logout button:
+4.  Wire logout button:
 
 `Logout.js`
 
 ```javascript
 // Actions
-import * as actionCreators from "./store/actions";
+import authStore from "./store/authStore";
 ...
 <button className="btn btn-danger" onClick={props.logout}>
-    Logout {props.user.username}
+    Logout {authStore.user.username}
 </button>
 ...
-const mapDispatchToProps = dispatch => ({
-  logout: () => dispatch(actionCreators.logout())
-});
 ```
 
 ##### DO NOT SHOW USERS THINGS THEY CAN'T USE!
 
-1. Conditionally render the treasure button:
+1.  Conditionally render the treasure button:
 
 `Home.js`
 
 ```javascript
+import authStore from "./store/authStore"
+
 const Home = props => {
   return (
     ...
-    {props.user && (
+    {authStore.user && (
     <Link to="/treasure" className="btn btn-lg btn-warning mx-auto">
         TREASURE
     </Link>
@@ -288,15 +209,11 @@ const Home = props => {
     ...
   );
 };
-
-const mapStateToProps = state => ({
-  user: state.auth.user
-});
 ```
 
 ##### Redirect after signup
 
-1. Demonstrate the `history` object in `Singup.js`. Explain where it came from:
+1.  Demonstrate the `history` object in `Singup.js`. Explain where it came from:
 
 ```javascript
 ...
@@ -320,22 +237,20 @@ render() {
 ...
 ```
 
-2. Modify action to accept `history`:
+2.  Modify action to accept `history`:
 
-`authActions.js`
+`authStore.js`
 
 ```javascript
-export const signup = (userData, history) => {
-  return dispatch => {
+signupUser = (userData, history) => {
     ...
       .then(user => {
         const decodedUser = jwt_decode(user.token);
-        setAuthToken(user.token);
-        dispatch(setCurrentUser(decodedUser));
+        this.setAuthToken(user.token);
+        this.setCurrentUser(decodedUser);
         history.push("/");
       })
     ...
-  };
 };
 ```
 
@@ -346,43 +261,34 @@ class Signup extends Component {
   ...
   handleSubmit(event) {
     event.preventDefault();
-    this.props.signup(this.state, this.props.history);
+    authStore.signupUser(this.state, this.props.history);
   }
   ...
 }
-
-const mapDispatchToProps = dispatch => ({
-  signup: (userData, history) =>
-    dispatch(actionCreators.signup(userData, history))
-});
 ```
 
 ##### PrivateRoutes
 
 Don't allow users to access pages they can't use! Redirect from private pages!
 
-1. Private Route:
+1.  Private Route:
 
 `PrivateRoute.js`
 
 ```javascript
-const PrivateRoute = ({ component: Component, user, redirectUrl, ...rest }) => (
+const PrivateRoute = ({ component: Component, authStore.user, redirectUrl, ...rest }) => (
   <Route
     {...rest}
     render={props =>
-      user ? <Component {...props} /> : <Redirect to={redirectUrl || "/"} />
+      authStore.user ? <Component {...props} /> : <Redirect to={redirectUrl || "/"} />
     }
   />
 );
 
-const mapStateToProps = state => ({
-  user: state.auth.user
-});
-
-export default connect(mapStateToProps)(PrivateRoute);
+export default observer(PrivateRoute);
 ```
 
-2. Use private route for pages that require auth:
+2.  Use private route for pages that require auth:
 
 `App.js`
 
@@ -400,24 +306,26 @@ export default connect(mapStateToProps)(PrivateRoute);
 
 If the page refreshes after sign in, I should STILL be signed in!
 
-1. Store the token in local storage:
+1.  Store the token in local storage:
 
 `authActions.js`
 
 ```javascript
-const setAuthToken = token => {
-  localStorage.setItem("treasureToken", token);
-  axios.defaults.headers.common.Authorization = `jwt ${token}`;
+setAuthToken(token) => {
+  if (token) {
+    localStorage.setItem("treasureToken", token);
+    axios.defaults.headers.common.Authorization = `jwt ${token}`;
+  }
+  ...
 };
 ```
 
-2. Add an action that checks for a token in localstorage:
+2.  Add an action that checks for a token in `localstorage`:
 
-`authActions.js`
+`authStore.js`
 
 ```javascript
-export const checkForExpiredToken = () => {
-  return dispatch => {
+checkForExpiredToken() {
     // Check for token expiration
     const token = localStorage.treasureToken;
 
@@ -430,33 +338,25 @@ export const checkForExpiredToken = () => {
       // Check token expiration
       if (user.exp >= currentTime) {
         // Set auth token header
-        setAuthToken(token);
+        this.setAuthToken(token);
         // Set user
-        dispatch(setCurrentUser(user));
+        this.setCurrentUser(user);
       } else {
-        dispatch(logout());
+        this.logoutUser();
       }
-    }
   };
 };
 ```
 
-3. Call the action from `componentDidMount` in `App.js`:
+3.  Call the action from `componentDidMount` in `App.js`:
 
 ```javascript
 class App extends Component {
   componentDidMount() {
-    this.props.checkToken();
+    authStore.checkToken();
   }
   ...
 }
 
-const mapDispatchToProps = dispatch => ({
-  checkToken: () => dispatch(actionCreators.checkForExpiredToken())
-});
-
-export default connect(
-  null,
-  mapDispatchToProps
-)(App);
+export default observer(App);
 ```

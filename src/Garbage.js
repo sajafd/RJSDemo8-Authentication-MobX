@@ -1,16 +1,16 @@
 import React, { Component } from "react";
-import { connect } from "react-redux";
+import { observer } from "mobx-react";
 
-// Actions
-import * as actionCreators from "./store/actions";
+// Store
+import thingStore from "./store/thingStore";
 
 class Garbage extends Component {
   componentDidMount() {
-    this.props.getGarbage();
+    thingStore.fetchGarbage();
   }
 
   render() {
-    const rows = this.props.garbage.map(thing => (
+    const rows = thingStore.garbage.map(thing => (
       <tr key={thing.name}>
         <td className="text-center">{thing.name}</td>
       </tr>
@@ -27,15 +27,4 @@ class Garbage extends Component {
   }
 }
 
-const mapStateToProps = state => ({
-  garbage: state.things.public
-});
-
-const mapDispatchToProps = dispatch => ({
-  getGarbage: () => dispatch(actionCreators.fetchGarbage())
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Garbage);
+export default observer(Garbage);

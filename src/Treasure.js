@@ -1,16 +1,16 @@
 import React, { Component } from "react";
-import { connect } from "react-redux";
+import { observer } from "mobx-react";
 
-// Actions
-import * as actionCreators from "./store/actions";
+// Store
+import thingStore from "./store/thingStore";
 
 class Treasure extends Component {
   componentDidMount() {
-    this.props.getTreasure();
+    thingStore.fetchTreasure();
   }
 
   render() {
-    const rows = this.props.treasure.map(thing => (
+    const rows = thingStore.treasure.map(thing => (
       <tr key={thing.name} className="table-warning">
         <td>{thing.name}</td>
       </tr>
@@ -27,15 +27,4 @@ class Treasure extends Component {
   }
 }
 
-const mapStateToProps = state => ({
-  treasure: state.things.private
-});
-
-const mapDispatchToProps = dispatch => ({
-  getTreasure: () => dispatch(actionCreators.fetchTreasure())
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Treasure);
+export default observer(Treasure);
