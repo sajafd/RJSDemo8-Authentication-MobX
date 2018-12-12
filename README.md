@@ -328,6 +328,9 @@ export default observer(PrivateRoute);
   <Route path="/signup" component={Signup} />
   <Redirect to="/" />
 </Switch>
+
+export default withRouter(observer(App));
+
 ```
 
 ##### Persistent Login
