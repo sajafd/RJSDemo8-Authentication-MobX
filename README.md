@@ -8,6 +8,27 @@
 
 #### Basic Auth
 
+1. Create `authStore.js`:
+
+```javascript
+import { decorate, observable, computed } from "mobx";
+import axios from "axios";
+
+class AuthStore {
+  constructor() {
+    this.user = null;
+  }
+}
+
+decorate(AuthStore, {
+  user: observable
+});
+
+const authStore = new AuthStore();
+
+export default authStore;
+```
+
 2.  Add a `loginUser` method:
 
 `authStore.js`
