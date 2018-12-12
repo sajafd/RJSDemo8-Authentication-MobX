@@ -1,4 +1,4 @@
-# RJSDemo9 - Authentication
+# RJSDemo9 - Authentication - MobX
 
 1.  Walk through the code:
 
@@ -7,6 +7,27 @@
     - Show the 401
 
 #### Basic Auth
+
+1. Create `authStore.js`:
+
+```javascript
+import { decorate, observable, computed } from "mobx";
+import axios from "axios";
+
+class AuthStore {
+  constructor() {
+    this.user = null;
+  }
+}
+
+decorate(AuthStore, {
+  user: observable
+});
+
+const authStore = new AuthStore();
+
+export default authStore;
+```
 
 2.  Add a `loginUser` method:
 
@@ -27,6 +48,8 @@
 
 ```javascript
 import {observer} from "mobx-react";
+import authStore from "./store/authStore";
+
 ...
   handleSubmit(event) {
     event.preventDefault();
@@ -134,6 +157,8 @@ export default observer(Signup);
 import React from "react";
 import { observer } from "mobx-react";
 
+import authStore from "./store/authStore";
+
 const Logout = props => {
   return (
     <button className="btn btn-danger" onClick={() => alert("LOGOUT!!")}>
@@ -183,7 +208,7 @@ logoutUser() {
 // Actions
 import authStore from "./store/authStore";
 ...
-<button className="btn btn-danger" onClick={props.logout}>
+<button className="btn btn-danger" onClick={authStore.logoutUser}>
     Logout {authStore.user.username}
 </button>
 ...
@@ -276,6 +301,9 @@ Don't allow users to access pages they can't use! Redirect from private pages!
 `PrivateRoute.js`
 
 ```javascript
+import { Switch, Route, Redirect } from "react-router-dom";
+import { observer } from "mobx-react";
+
 const PrivateRoute = ({ component: Component, authStore.user, redirectUrl, ...rest }) => (
   <Route
     {...rest}
@@ -299,9 +327,10 @@ export default observer(PrivateRoute);
   <PrivateRoute path="/treasure" component={Treasure} />
   <Route path="/signup" component={Signup} />
   <Redirect to="/" />
-</Switch>;
+</Switch>
 
 export default withRouter(observer(App));
+
 ```
 
 ##### Persistent Login
@@ -310,7 +339,7 @@ If the page refreshes after sign in, I should STILL be signed in!
 
 1.  Store the token in local storage:
 
-`authActions.js`
+`authStore.js`
 
 ```javascript
 setAuthToken(token) => {
@@ -322,7 +351,7 @@ setAuthToken(token) => {
 };
 ```
 
-2.  Add an action that checks for a token in `localstorage`:
+2.  Add an action that checks for a token in `localStorage`:
 
 `authStore.js`
 
