@@ -1,6 +1,9 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
 
+import { observer } from "mobx-react";
+import authStore from "./store/authStore";
+
 class Login extends Component {
   constructor(props) {
     super(props);
@@ -19,7 +22,7 @@ class Login extends Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    console.log(this.state);
+    authStore.loginUser(this.state);
   }
 
   render() {
@@ -53,4 +56,4 @@ class Login extends Component {
   }
 }
 
-export default Login;
+export default observer(Login);
